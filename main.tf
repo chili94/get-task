@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
 }
 
 resource "aws_vpc" "app-vpc" {
@@ -15,20 +15,20 @@ resource "aws_internet_gateway" "app-igw" {
 }
 
 resource "aws_subnet" "app-public-a" {
-  vpc_id            = aws_vpc.app-vpc.id
-  cidr_block        = "10.0.1.0/24"
+  vpc_id                  = aws_vpc.app-vpc.id
+  cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone       = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "subnet-a"
   }
 }
 
 resource "aws_subnet" "app-public-b" {
-  vpc_id            = aws_vpc.app-vpc.id
-  cidr_block        = "10.0.2.0/24"
+  vpc_id                  = aws_vpc.app-vpc.id
+  cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
-  availability_zone = data.aws_availability_zones.available.names[1]
+  availability_zone       = data.aws_availability_zones.available.names[1]
   tags = {
     Name = "subnet-b"
   }
@@ -69,7 +69,7 @@ resource "aws_security_group" "app-sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.localip]
   }
   ingress {
     description = "HTTP"
@@ -94,15 +94,15 @@ resource "aws_security_group" "app-sg" {
 
 resource "aws_network_interface" "app-eni" {
   subnet_id = aws_subnet.app-public-a.id
-
+  security_groups = [aws_security_group.app-sg.id]
   tags = {
     Name = "primary_network_interface"
   }
 }
 
-resource "aws_key_pair" "my_key"{
-	key_name = "wp_key"
-	public_key = "${var.wp_key}"
+resource "aws_key_pair" "app-key" {
+  key_name   = "app-key"
+  public_key = file(var.app-key-pub)
 }
 
 resource "aws_instance" "app-web" {
@@ -112,8 +112,8 @@ resource "aws_instance" "app-web" {
     network_interface_id = aws_network_interface.app-eni.id
     device_index         = 0
   }
-  key_name = "wp_key"
-  user_data = "${data.template_file.script.rendered}"
+  key_name  = aws_key_pair.app-key.id
+  user_data = file("install_httpd.sh")
   tags = {
     Name        = "test-ec2"
     Description = "Test instance"
