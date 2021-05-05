@@ -8,3 +8,5 @@ Terraform  (terraform version 0.15.1):
 * `terraform validate` - Check syntax.
 * `terraform plan -out example` - Create terraform example plan.
 * `terraform apply example` - Apply terraform "example" plan generated in above step.
+
+when you create a file `terraform.tfvars` you have to enter your path to the public key and also the ip address from which you will access.
