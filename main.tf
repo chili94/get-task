@@ -2,9 +2,13 @@ provider "aws" {
   region = var.aws_region
 }
 
+#---VPC---#
+
 resource "aws_vpc" "app-vpc" {
   cidr_block = "10.0.0.0/21"
 }
+
+#---IGW---#
 
 resource "aws_internet_gateway" "app-igw" {
   vpc_id = aws_vpc.app-vpc.id
@@ -13,6 +17,8 @@ resource "aws_internet_gateway" "app-igw" {
     Name = "app-iwg"
   }
 }
+
+#---Subnet_a_b---#
 
 resource "aws_subnet" "app-public-a" {
   vpc_id                  = aws_vpc.app-vpc.id
@@ -34,6 +40,7 @@ resource "aws_subnet" "app-public-b" {
   }
 }
 
+#---RouteTandAssoT---#
 
 resource "aws_route_table" "app-route-table" {
   vpc_id = aws_vpc.app-vpc.id
@@ -58,6 +65,8 @@ resource "aws_route_table_association" "app-rta-b" {
   subnet_id      = aws_subnet.app-public-b.id
   route_table_id = aws_route_table.app-route-table.id
 }
+
+#---SG---#
 
 resource "aws_security_group" "app-sg" {
   name        = "default-sg"
@@ -92,6 +101,8 @@ resource "aws_security_group" "app-sg" {
   }
 }
 
+#---Eni---#
+
 resource "aws_network_interface" "app-eni" {
   subnet_id = aws_subnet.app-public-a.id
   security_groups = [aws_security_group.app-sg.id]
@@ -100,10 +111,14 @@ resource "aws_network_interface" "app-eni" {
   }
 }
 
+#---key---#
+
 resource "aws_key_pair" "app-key" {
   key_name   = "app-key"
   public_key = file(var.app-key-pub)
 }
+
+#---compute---#
 
 resource "aws_instance" "app-web" {
   ami           = "ami-0742b4e673072066f"
