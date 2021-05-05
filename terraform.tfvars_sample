@@ -5,5 +5,5 @@ aws_region  = "us-east-1"
 
 localip = "178.223.1.109/32"
 
-
+#PublicKey
 app-key-pub = "/root/.ssh/app-key.pub"
